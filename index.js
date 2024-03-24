@@ -29,8 +29,8 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
 
-app.get("api/users", async (req, res) => {
-  const users = await User.find({}). select("_id username");
+app.get("/api/users", async (req, res) => {
+  const users = await User.find({}).select("_id username");
   if (!users) {
     res.send("No users");
   } else {
@@ -40,27 +40,26 @@ app.get("api/users", async (req, res) => {
 
 app.post("/api/users", async (req, res) => {
   console.log(req.body)
-  const UserObj = new User({
+  const userObj = new User({
     username: req.body.username
   })
 
   try{
-  const user = await userObj.save()
-  console.log(user);
-  res.json(user)
+    const user = await userObj.save()
+    console.log(user);
+    res.json(user)
   }catch(err){
-    console.log
+    console.log(err)
   }
-
-
+  
 })
 
-app.post("/api/users/:_id/exerices", async (req, res) => {
+app.post("/api/users/:_id/exercises", async (req, res) => {
   const id = req.params._id;
   const { description, duration, date } = req.body
 
   try{
-    const user = await User.findOneId(id)
+    const user = await User.findById(id)
     if (!user){
       res.send("Could not find user")
     } else {
@@ -74,7 +73,7 @@ app.post("/api/users/:_id/exerices", async (req, res) => {
       res.json({
         _id: user._id,
         username: user.username,
-        decsription: exercise.description,
+        description: exercise.description,
         duration: exercise.duration,
         date: new Date(exercise.date).toDateString()
       })
@@ -84,6 +83,7 @@ app.post("/api/users/:_id/exerices", async (req, res) => {
     res.send("There was an error saving the exercise")
   }
 })
+
 
 app.get("/api/users/:_id/logs", async (req, res) => {
   const { from, to, limit } = req.query;
@@ -109,19 +109,21 @@ app.get("/api/users/:_id/logs", async (req, res) => {
 
   const exercises = await Exercise.find(filter).limit(+limit ?? 500)
 
-  const log = exercise.map(e =>({
+  const log = exercises.map(e => ({
     description: e.description,
     duration: e.duration,
     date: e.date.toDateString()
   }))
-
+  
   res.json({
     username: user.username,
-    count: exercise.length,
+    count: exercises.length,
     _id: user._id,
     log
   })
 })
+
+
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
